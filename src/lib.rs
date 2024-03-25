@@ -1,4 +1,4 @@
-use zed::Command;
+use zed::{Command, LanguageServerInstallationStatus};
 use zed_extension_api as zed;
 
 struct Moxide {
@@ -13,14 +13,12 @@ impl zed::Extension for Moxide {
             worktree: &zed::Worktree,
         ) -> zed::Result<zed::Command> {
 
-
-        zed::set_language_server_installation_status(
-            &config.name,
-            &zed::LanguageServerInstallationStatus::Downloading,
-        );
+        let path = worktree
+            .which("markdown-oxided")
+            .ok_or_else(|| "markdown-oxide is not installed; check repo to install".to_string())?;
 
         Ok(Command {
-            command: "markdown-oxide".to_string(),
+            command: path,
             args: Default::default(),
             env: Default::default()
         })
