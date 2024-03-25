@@ -14,7 +14,7 @@ impl zed::Extension for Moxide {
         ) -> zed::Result<zed::Command> {
 
         let path = worktree
-            .which("markdown-oxided")
+            .which("markdown-oxide")
             .ok_or_else(|| "markdown-oxide is not installed; check repo to install".to_string())?;
 
         Ok(Command {
