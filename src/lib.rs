@@ -8,19 +8,16 @@ struct Moxide {
 }
 
 impl Moxide {
-fn language_server_binary_path(
+    fn language_server_binary_path(
         &mut self,
         config: zed::LanguageServerConfig,
         worktree: &zed::Worktree,
     ) -> zed::Result<String> {
-
-
         if let Some(path) = &self.cached_binary_path {
             if fs::metadata(path).map_or(false, |stat| stat.is_file()) {
                 return Ok(path.clone());
             }
         }
-
 
         // first check if already installed to path
         if let Some(path) = worktree.which("markdown-oxide") {
@@ -43,20 +40,23 @@ fn language_server_binary_path(
         // TODO: add support for windows when the time comes; will need to
         // change the .tar.gz extension to .zip
         let (platform, arch) = zed::current_platform();
-        let asset_name = (|| Some(format!(
-            "markdown-oxide-{version}-{arch}-{os}.tar.gz",
-            version = release.version,
-            arch = match arch {
-                zed::Architecture::Aarch64 => "aarch64",
-                zed::Architecture::X86 => None?,
-                zed::Architecture::X8664 => "x86_64",
-            },
-            os = match platform {
-                zed::Os::Mac => "apple-darwin",
-                zed::Os::Linux => "unknown-linux-gnu",
-                zed::Os::Windows => "pc-windows-gnu", // Zed doesn't support windows LOL
-            },
-        )))().ok_or_else(|| "unsupported platform")?;
+        let asset_name = (|| {
+            Some(format!(
+                "markdown-oxide-{version}-{arch}-{os}.tar.gz",
+                version = release.version,
+                arch = match arch {
+                    zed::Architecture::Aarch64 => "aarch64",
+                    zed::Architecture::X86 => None?,
+                    zed::Architecture::X8664 => "x86_64",
+                },
+                os = match platform {
+                    zed::Os::Mac => "apple-darwin",
+                    zed::Os::Linux => "unknown-linux-gnu",
+                    zed::Os::Windows => "pc-windows-gnu", // Zed doesn't support windows LOL
+                },
+            ))
+        })()
+        .ok_or_else(|| "unsupported platform")?;
 
         let asset = release
             .assets
@@ -97,31 +97,27 @@ fn language_server_binary_path(
     }
 }
 
-
 impl zed::Extension for Moxide {
-
     fn language_server_command(
-            &mut self,
-            config: zed::LanguageServerConfig,
-            worktree: &zed::Worktree,
-        ) -> zed::Result<zed::Command> {
-
-
+        &mut self,
+        config: zed::LanguageServerConfig,
+        worktree: &zed::Worktree,
+    ) -> zed::Result<zed::Command> {
         let binary_path = self.language_server_binary_path(config, worktree)?;
 
         return Ok(Command {
             command: binary_path,
             args: Default::default(),
             env: Default::default(),
-        })
+        });
     }
 
     fn new() -> Self
-        where
-            Self: Sized {
-        
-        Moxide{
-            cached_binary_path: None
+    where
+        Self: Sized,
+    {
+        Moxide {
+            cached_binary_path: None,
         }
     }
 }
