@@ -1,6 +1,6 @@
 use std::fs;
 
-use zed::{Command, LanguageServerInstallationStatus};
+use zed::Command;
 use zed_extension_api as zed;
 
 struct Moxide {
@@ -37,26 +37,25 @@ impl Moxide {
             },
         )?;
 
-        // TODO: add support for windows when the time comes; will need to
-        // change the .tar.gz extension to .zip
         let (platform, arch) = zed::current_platform();
-        let asset_name = (|| {
-            Some(format!(
-                "markdown-oxide-{version}-{arch}-{os}.tar.gz",
-                version = release.version,
-                arch = match arch {
-                    zed::Architecture::Aarch64 => "aarch64",
-                    zed::Architecture::X86 => None?,
-                    zed::Architecture::X8664 => "x86_64",
-                },
-                os = match platform {
-                    zed::Os::Mac => "apple-darwin",
-                    zed::Os::Linux => "unknown-linux-gnu",
-                    zed::Os::Windows => "pc-windows-gnu", // Zed doesn't support windows LOL
-                },
-            ))
-        })()
-        .ok_or_else(|| "unsupported platform")?;
+        let asset_name = format!(
+            "markdown-oxide-{version}-{arch}-{os}.{extension}",
+            version = release.version,
+            arch = match arch {
+                zed::Architecture::Aarch64 => "aarch64",
+                zed::Architecture::X86 => return Err(format!("unsupported platform")),
+                zed::Architecture::X8664 => "x86_64",
+            },
+            os = match platform {
+                zed::Os::Mac => "apple-darwin",
+                zed::Os::Linux => "unknown-linux-gnu",
+                zed::Os::Windows => "pc-windows-gnu",
+            },
+            extension = match platform {
+                zed::Os::Mac | zed::Os::Linux => "tar.gz",
+                zed::Os::Windows => "zip",
+            }
+        );
 
         let asset = release
             .assets
@@ -77,7 +76,10 @@ impl Moxide {
             zed::download_file(
                 &asset.download_url,
                 &version_dir,
-                zed::DownloadedFileType::GzipTar,
+                match platform {
+                    zed::Os::Mac | zed::Os::Linux => zed::DownloadedFileType::GzipTar,
+                    zed::Os::Windows => zed::DownloadedFileType::Zip,
+                },
             )
             .map_err(|e| format!("failed to download file: {e}"))?;
 
