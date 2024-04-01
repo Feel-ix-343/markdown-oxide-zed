@@ -47,7 +47,7 @@ fn language_server_binary_path(
             "markdown-oxide-{version}-{arch}-{os}.tar.gz",
             version = release.version,
             arch = match arch {
-                zed::Architecture::Aarch64 => None?,
+                zed::Architecture::Aarch64 => "aarch64",
                 zed::Architecture::X86 => None?,
                 zed::Architecture::X8664 => "x86_64",
             },
