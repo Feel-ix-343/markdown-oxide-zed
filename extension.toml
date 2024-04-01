@@ -1,6 +1,6 @@
 id = "markdown-oxide"
 name = "Markdown Oxide"
-description = "Obsidian-Inspired PKM Language Server for Zed. Follow README to install"
+description = "Obsidian-Inspired PKM Language Server for Zed"
 version = "0.0.3"
 schema_version = 1
 authors = ["Felix Zeller <felixazeller@gmail.com>"]
