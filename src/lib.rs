@@ -38,34 +38,40 @@ impl Moxide {
         )?;
 
         let (platform, arch) = zed::current_platform();
-        let asset_name = format!(
-            "markdown-oxide-{version}-{arch}-{os}.{extension}",
-            version = release.version,
-            arch = match arch {
-                zed::Architecture::Aarch64 => "aarch64",
-                zed::Architecture::X86 => return Err(format!("unsupported platform")),
-                zed::Architecture::X8664 => "x86_64",
+        let (asset_name, asset_extension, lsp_extension) = (
+            format!(
+                "markdown-oxide-{version}-{arch}-{os}",
+                version = release.version,
+                arch = match arch {
+                    zed::Architecture::Aarch64 => "aarch64",
+                    zed::Architecture::X86 => return Err(format!("unsupported platform")),
+                    zed::Architecture::X8664 => "x86_64",
+                },
+                os = match platform {
+                    zed::Os::Mac => "apple-darwin",
+                    zed::Os::Linux => "unknown-linux-gnu",
+                    zed::Os::Windows => "pc-windows-gnu",
+                }
+            ),
+            match platform {
+                zed::Os::Mac | zed::Os::Linux => ".tar.gz",
+                zed::Os::Windows => ".zip",
             },
-            os = match platform {
-                zed::Os::Mac => "apple-darwin",
-                zed::Os::Linux => "unknown-linux-gnu",
-                zed::Os::Windows => "pc-windows-gnu",
+            match platform {
+                zed::Os::Windows => ".exe",
+                _ => "",
             },
-            extension = match platform {
-                zed::Os::Mac | zed::Os::Linux => "tar.gz",
-                zed::Os::Windows => "zip",
-            }
         );
 
+        let asset_full_name = format!("{}{}", asset_name, asset_extension);
         let asset = release
             .assets
             .iter()
-            .find(|asset| asset.name == asset_name)
-            .ok_or_else(|| format!("no asset found matching {:?}", asset_name))?;
+            .find(|asset| asset.name == asset_full_name)
+            .ok_or_else(|| format!("no asset found matching {:?}", asset_full_name))?;
 
         let version_dir = format!("markdown-oxide-{}", release.version);
-        let asset_name_no_extension = asset_name.replace(".tar.gz", "");
-        let binary_path = format!("{version_dir}/{asset_name_no_extension}/markdown-oxide");
+        let binary_path = format!("{version_dir}/{asset_name}/markdown-oxide{lsp_extension}");
 
         if !fs::metadata(&binary_path).map_or(false, |stat| stat.is_file()) {
             zed::set_language_server_installation_status(
