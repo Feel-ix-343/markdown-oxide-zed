@@ -1,7 +1,6 @@
 use std::fs;
 
-use zed::Command;
-use zed_extension_api as zed;
+use zed_extension_api::{self as zed, LanguageServerId};
 
 struct Moxide {
     cached_binary_path: Option<String>,
@@ -10,7 +9,7 @@ struct Moxide {
 impl Moxide {
     fn language_server_binary_path(
         &mut self,
-        config: zed::LanguageServerConfig,
+        language_server_id: &LanguageServerId,
         worktree: &zed::Worktree,
     ) -> zed::Result<String> {
         if let Some(path) = &self.cached_binary_path {
@@ -26,7 +25,7 @@ impl Moxide {
         }
 
         zed::set_language_server_installation_status(
-            &config.name,
+            language_server_id,
             &zed::LanguageServerInstallationStatus::CheckingForUpdate,
         );
         let release = zed::latest_github_release(
@@ -75,7 +74,7 @@ impl Moxide {
 
         if !fs::metadata(&binary_path).map_or(false, |stat| stat.is_file()) {
             zed::set_language_server_installation_status(
-                &config.name,
+                language_server_id,
                 &zed::LanguageServerInstallationStatus::Downloading,
             );
 
@@ -108,12 +107,12 @@ impl Moxide {
 impl zed::Extension for Moxide {
     fn language_server_command(
         &mut self,
-        config: zed::LanguageServerConfig,
+        language_server_id: &LanguageServerId,
         worktree: &zed::Worktree,
     ) -> zed::Result<zed::Command> {
-        let binary_path = self.language_server_binary_path(config, worktree)?;
+        let binary_path = self.language_server_binary_path(language_server_id, worktree)?;
 
-        return Ok(Command {
+        return Ok(zed::Command {
             command: binary_path,
             args: Default::default(),
             env: Default::default(),
